@@ -14,6 +14,15 @@ class interval {
 
     auto surrounds(float x) const -> bool { return x > min && x < max; }
 
+    auto clamp(float x) const -> float {
+        if (x < min)
+            return min;
+        else if (x > max)
+            return max;
+        else
+            return x;
+    }
+
     static const interval empty, universe;
 };
 
