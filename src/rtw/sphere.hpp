@@ -7,7 +7,7 @@ class sphere : public hittable {
    public:
     sphere(point3 _center, float _radius) : center(_center), radius(_radius) {}
 
-    auto hit(const ray& r, float ray_tmin, float ray_tmax, hit_record& rec) const -> bool override {
+    auto hit(const ray& r, interval ray_t, hit_record& rec) const -> bool override {
         auto oc = r.origin() - center;
         auto a = r.direction().length_squared();
         auto half_b = dot(oc, r.direction());
@@ -20,15 +20,17 @@ class sphere : public hittable {
 
         // find the root in the range if it exists
         auto root = (-half_b - sqrtd) / a;
-        if (root <= ray_tmin || root >= ray_tmax) {
+        if (!ray_t.surrounds(root)) {
             // try the other root if the first one is out of range
             root = (-half_b + sqrtd) / a;
-            if (root <= ray_tmin || root >= ray_tmax) return false;
+            if (!ray_t.surrounds(root)) return false;
         }
 
         rec.t = root;
         rec.p = r.at(rec.t);
         rec.normal = (rec.p - center) / radius;
+        auto outward_normal = (rec.p - center) / radius;
+        rec.set_face_normal(r, outward_normal);
 
         return true;
     }
