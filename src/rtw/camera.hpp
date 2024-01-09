@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <thread>
 
 #include "color.hpp"
 #include "hittable.hpp"
@@ -25,21 +26,35 @@ class camera {
     auto render(const hittable& world) -> void {
         initialize();
 
-        std::cout << "P3\n" << image_width << " " << image_height << "\n256\n";
-
+        color* image = new color[image_width * image_height];
+        std::vector<std::thread> threads;
         for (int j = 0; j < image_height; j++) {
-            std::clog << "\rScanlines remaining: " << (image_height - j) << " " << std::flush;
-            for (int i = 0; i < image_width; i++) {
-                color pixel_color(0, 0, 0);
-                for (int sample = 0; sample < samples_per_pixel; sample++) {
-                    auto r = get_ray(i, j);
-                    pixel_color += ray_color(r, max_depth, world);
+            // each thread does a row, one thread per j
+            color* row = image + j * image_width;
+            threads.emplace_back([&, row, j] {
+                for (int i = 0; i < image_width; i++) {
+                    color pixel_color(0, 0, 0);
+                    for (int sample = 0; sample < samples_per_pixel; sample++) {
+                        auto r = get_ray(i, j);
+                        pixel_color += ray_color(r, max_depth, world);
+                    }
+                    row[i] = pixel_color;
                 }
+            });
+        }
+        for (auto& thread : threads) {
+            thread.join();
+        }
+
+        std::cout << "P3\n" << image_width << " " << image_height << "\n256\n";
+        for (int j = 0; j < image_height; j++) {
+            for (int i = 0; i < image_width; i++) {
+                auto pixel_color = image[j * image_width + i];
                 write_color(std::cout, pixel_color, samples_per_pixel);
             }
         }
 
-        std::clog << "\rDone.                 \n";
+        delete[] image;
     }
 
    private:
