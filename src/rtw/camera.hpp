@@ -104,7 +104,7 @@ class camera {
         return center + p[0] * defocus_disk_u + p[1] * defocus_disk_v;
     }
 
-    auto ray_color(const ray& r, int depth, const hittable& world) -> color {
+    auto ray_color(const ray& r, int depth, const hittable& world) const -> color {
         if (depth <= 0) return color(0, 0, 0);
 
         hit_record rec;
