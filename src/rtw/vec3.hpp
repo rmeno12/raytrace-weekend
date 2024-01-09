@@ -3,6 +3,8 @@
 #include <cmath>
 #include <iostream>
 
+#include "rtweekend.hpp"
+
 class vec3 {
    public:
     float e[3];
@@ -39,6 +41,17 @@ class vec3 {
     auto length() const -> float { return std::sqrt(length_squared()); }
 
     auto length_squared() const -> float { return e[0] * e[0] + e[1] * e[1] + e[2] * e[2]; }
+
+    auto near_zero() const -> bool {
+        auto s = 1e-8;
+        return std::fabs(e[0]) < s && std::fabs(e[1]) < s && std::fabs(e[2]) < s;
+    }
+
+    static auto random() -> vec3 { return vec3(random_float(), random_float(), random_float()); }
+
+    static auto random(float min, float max) -> vec3 {
+        return vec3(random_float(min, max), random_float(min, max), random_float(min, max));
+    }
 };
 
 using point3 = vec3;
@@ -77,3 +90,22 @@ inline auto cross(const vec3& u, const vec3& v) -> vec3 {
 }
 
 inline auto unit_vector(const vec3& v) -> vec3 { return v / v.length(); }
+
+inline auto random_in_unit_sphere() -> vec3 {
+    while (true) {
+        auto p = vec3::random(-1, 1);
+        if (p.length_squared() < 1) return p;
+    }
+}
+
+inline auto random_unit_vector() -> vec3 { return unit_vector(random_in_unit_sphere()); }
+
+inline auto random_on_hemisphere(const vec3& normal) -> vec3 {
+    auto on_unit_sphere = random_unit_vector();
+    if (dot(on_unit_sphere, normal) > 0)
+        return on_unit_sphere;
+    else
+        return -on_unit_sphere;
+}
+
+inline auto reflect(const vec3& v, const vec3& n) -> vec3 { return v - 2 * dot(v, n) * n; }
