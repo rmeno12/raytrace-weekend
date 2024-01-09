@@ -91,6 +91,13 @@ inline auto cross(const vec3& u, const vec3& v) -> vec3 {
 
 inline auto unit_vector(const vec3& v) -> vec3 { return v / v.length(); }
 
+inline auto random_in_unit_disk() -> vec3 {
+    while (true) {
+        auto p = vec3(random_float(-1, 1), random_float(-1, 1), 0);
+        if (p.length_squared() < 1) return p;
+    }
+}
+
 inline auto random_in_unit_sphere() -> vec3 {
     while (true) {
         auto p = vec3::random(-1, 1);
