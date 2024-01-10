@@ -23,22 +23,32 @@ class camera {
     float defocus_angle = 0;
     float focus_dist = 10;
 
+    int num_threads = 1;
+
     auto render(const hittable& world) -> void {
         initialize();
 
-        color* image = new color[image_width * image_height];
+        auto thread_alloc_dv = std::div(samples_per_pixel, num_threads);
         std::vector<std::thread> threads;
-        for (int j = 0; j < image_height; j++) {
-            // each thread does a row, one thread per j
-            color* row = image + j * image_width;
-            threads.emplace_back([&, row, j] {
-                for (int i = 0; i < image_width; i++) {
-                    color pixel_color(0, 0, 0);
-                    for (int sample = 0; sample < samples_per_pixel; sample++) {
-                        auto r = get_ray(i, j);
-                        pixel_color += ray_color(r, max_depth, world);
+        std::vector<std::vector<color>> thread_images;
+        thread_images.reserve(num_threads);
+
+        for (int t = 0; t < num_threads; t++) {
+            thread_images.push_back({});
+            thread_images[t].reserve(image_height * image_width);
+            threads.emplace_back([&, t] {
+                // each thread does an evenly distributed number of samples + enough to cover extra
+                // that wasn't an even multiple
+                auto this_thread_samples = thread_alloc_dv.quot + (thread_alloc_dv.rem > t ? 1 : 0);
+                for (int j = 0; j < image_height; j++) {
+                    for (int i = 0; i < image_width; i++) {
+                        color pixel_color(0, 0, 0);
+                        for (int sample = 0; sample < this_thread_samples; sample++) {
+                            auto r = get_ray(i, j);
+                            pixel_color += ray_color(r, max_depth, world);
+                        }
+                        thread_images[t].push_back(pixel_color);
                     }
-                    row[i] = pixel_color;
                 }
             });
         }
@@ -49,12 +59,12 @@ class camera {
         std::cout << "P3\n" << image_width << " " << image_height << "\n256\n";
         for (int j = 0; j < image_height; j++) {
             for (int i = 0; i < image_width; i++) {
-                auto pixel_color = image[j * image_width + i];
+                color pixel_color;
+                for (int t = 0; t < num_threads; t++)
+                    pixel_color += thread_images[t][j * image_width + i];
                 write_color(std::cout, pixel_color, samples_per_pixel);
             }
         }
-
-        delete[] image;
     }
 
    private:
