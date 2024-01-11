@@ -14,7 +14,10 @@ class hittable_list : public hittable {
 
     inline auto clear() -> void { objects.clear(); }
 
-    inline auto add(std::shared_ptr<hittable> object) -> void { objects.push_back(object); }
+    inline auto add(std::shared_ptr<hittable> object) -> void {
+        objects.push_back(object);
+        bbox = aabb(bbox, object->bounding_box());
+    }
 
     auto hit(const ray& r, interval ray_t, hit_record& rec) const -> bool override {
         hit_record temp_rec;
@@ -32,4 +35,9 @@ class hittable_list : public hittable {
 
         return hit_anything;
     }
+
+    auto bounding_box() const -> aabb override { return bbox; }
+
+   private:
+    aabb bbox;
 };

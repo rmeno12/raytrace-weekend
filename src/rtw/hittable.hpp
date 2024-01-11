@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aabb.hpp"
 #include "interval.hpp"
 #include "ray.hpp"
 
@@ -23,4 +24,6 @@ class hittable {
     virtual ~hittable() = default;
 
     virtual auto hit(const ray& r, interval ray_t, hit_record& rec) const -> bool = 0;
+
+    virtual auto bounding_box() const -> aabb = 0;
 };

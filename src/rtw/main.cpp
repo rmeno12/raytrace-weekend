@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "bvh.hpp"
 #include "camera.hpp"
 #include "color.hpp"
 #include "hittable.hpp"
@@ -53,22 +54,24 @@ auto main() -> int {
     auto material3 = std::make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
     world.add(std::make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
 
+    world = hittable_list(std::make_shared<bvh_node>(world));
+
     camera cam;
 
-    cam.aspect_ratio      = 16.0 / 9.0;
-    cam.image_width       = 400;
-    cam.samples_per_pixel = 9;
-    cam.max_depth         = 50;
+    cam.aspect_ratio = 16.0 / 9.0;
+    cam.image_width = 400;
+    cam.samples_per_pixel = 10;
+    cam.max_depth = 50;
 
-    cam.vfov     = 20;
-    cam.lookfrom = point3(13,2,3);
-    cam.lookat   = point3(0,0,0);
-    cam.vup      = vec3(0,1,0);
+    cam.vfov = 20;
+    cam.lookfrom = point3(13, 2, 3);
+    cam.lookat = point3(0, 0, 0);
+    cam.vup = vec3(0, 1, 0);
 
     cam.defocus_angle = 0.6;
-    cam.focus_dist    = 10.0;
+    cam.focus_dist = 10.0;
 
-    cam.num_threads = 2;
+    cam.num_threads = 6;
 
     cam.render(world);
 }

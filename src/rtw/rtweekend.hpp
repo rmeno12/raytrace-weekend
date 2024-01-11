@@ -19,3 +19,7 @@ inline auto random_float() -> float {
 inline auto random_float(float min, float max) -> float {
     return min + (max - min) * random_float();
 }
+
+inline auto random_int(int min, int max) -> int {
+    return static_cast<int>(random_float(min, max + 1));
+}
